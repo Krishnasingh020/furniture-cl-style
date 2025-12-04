@@ -34,6 +34,70 @@ app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/subcategories', subcategoryRoutes);
 
+// Models for Sitemap
+const Product = require('./models/Product');
+const Category = require('./models/Category');
+const Subcategory = require('./models/Subcategory');
+
+// ==== Sitemap Route ====
+app.get('/sitemap.xml', async (req, res) => {
+  try {
+    const baseUrl = 'http://localhost:8000';
+    const products = await Product.find({ isActive: true });
+    const categories = await Category.find({});
+    const subcategories = await Subcategory.find({});
+
+    let xml = '<?xml version="1.0" encoding="UTF-8"?>';
+    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
+
+    // Static Pages
+    xml += `
+    <url>
+      <loc>${baseUrl}/</loc>
+      <changefreq>daily</changefreq>
+      <priority>1.0</priority>
+    </url>`;
+
+    // Categories
+    categories.forEach(cat => {
+      xml += `
+    <url>
+      <loc>${baseUrl}/index_decor/category/${cat.slug}</loc>
+      <changefreq>weekly</changefreq>
+      <priority>0.8</priority>
+    </url>`;
+    });
+
+    // Subcategories
+    subcategories.forEach(sub => {
+      xml += `
+    <url>
+      <loc>${baseUrl}/index_decor/category/${sub.slug}</loc>
+      <changefreq>weekly</changefreq>
+      <priority>0.8</priority>
+    </url>`;
+    });
+
+    // Products
+    products.forEach(prod => {
+      xml += `
+    <url>
+      <loc>${baseUrl}/product/${prod.slug}</loc>
+      <changefreq>daily</changefreq>
+      <priority>0.9</priority>
+    </url>`;
+    });
+
+    xml += '</urlset>';
+
+    res.header('Content-Type', 'application/xml');
+    res.send(xml);
+  } catch (err) {
+    console.error('[Sitemap] Error generating sitemap:', err);
+    res.status(500).send('Error generating sitemap');
+  }
+});
+
 // ==== 3) Serve frontend static files ====
 const FRONTEND_ROOT = path.join(__dirname, '..', 'frontend');
 // Moved express.static to the end to allow HTML rewriting
@@ -222,6 +286,7 @@ app.get(['/*.html', '/'], (req, res) => {
 
 // Serve static files (CSS, JS, Images) - placed after HTML routes to allow rewriting
 app.use(express.static(FRONTEND_ROOT, { index: false }));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // ==== 6) Start server ====
 app.listen(PORT, () => {
