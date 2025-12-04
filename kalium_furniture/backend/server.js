@@ -108,6 +108,12 @@ function rewriteHtml(html) {
     }
   );
 
+  // REWRITE: Canonical and OpenGraph URLs
+  html = html.replace(
+    /(<link rel="canonical" href="|<meta property="og:url" content=")https:\/\/sites\.kaliumtheme\.com\/elementor\/furniture\//g,
+    '$1http://localhost:8000/'
+  );
+
   return html;
 }
 
