@@ -16,7 +16,7 @@ const BACKEND_ROOT = path.join(__dirname, 'kalium_furniture', 'backend');
 // 1) DB CONNECT
 // =====================
 // Connect to MongoDB Atlas if MONGODB_URI is provided, otherwise fallback to local
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/kalium_furniture';
+const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/kalium_furniture';
 
 const mongoose = require('mongoose');
 mongoose
