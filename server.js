@@ -37,6 +37,27 @@ app.use('/api/products', require(path.join(BACKEND_ROOT, 'routes', 'products')))
 app.use('/api/categories', require(path.join(BACKEND_ROOT, 'routes', 'categories')));
 app.use('/api/subcategories', require(path.join(BACKEND_ROOT, 'routes', 'subcategories')));
 
+// 2.1) NEW: Handle "Pretty" Category URLs
+// Matches: /index_decor/category/living -> serves index_decor.html
+// Matches: /index_tact/category/something -> serves index_tact.html
+app.get('/:page/category/:slug*', (req, res, next) => {
+  const pageFile = req.params.page + '.html'; // e.g. "index_decor.html"
+  const filePath = path.join(FRONTEND_ROOT, pageFile);
+
+  // Check if file exists, if so serve it (with rewrite), else next()
+  fs.access(filePath, fs.constants.F_OK, (err) => {
+    if (err) return next(); // Fallback to 404 or other routes
+
+    fs.readFile(filePath, 'utf8', (err, data) => {
+      if (err) return next();
+      const out = rewriteHtml(data);
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.send(out);
+    });
+  });
+});
+
+
 // =====================
 // 3) FRONTEND: static files
 // =====================
@@ -62,9 +83,9 @@ function rewriteHtml(html) {
     }
   );
 
-  // 3) site root URLs -> local root
+  // 3) site root URLs -> local root (BUT IGNORE wp-content/assets)
   html = html.replace(
-    /https:\/\/sites\.kaliumtheme\.com\/elementor\/furniture\//g,
+    /https:\/\/sites\.kaliumtheme\.com\/elementor\/furniture\/(?!wp-content|.*\.css|.*\.js|.*\.png|.*\.jpg)/g,
     '/'
   );
 
