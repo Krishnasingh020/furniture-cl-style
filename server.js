@@ -85,8 +85,15 @@ function rewriteHtml(html) {
 
   // 3) site root URLs -> local root (BUT IGNORE wp-content/assets)
   html = html.replace(
-    /https:\/\/sites\.kaliumtheme\.com\/elementor\/furniture\/(?!wp-content|.*\.css|.*\.js|.*\.png|.*\.jpg)/g,
+    /https:\/\/sites\.kaliumtheme\.com\/elementor\/furniture\/(?!wp-content|.*\.css|.*\.js|.*\.png|.*\.jpg|.*\.jpeg|.*\.svg|.*\.gif)/g,
     '/'
+  );
+
+  // 3.1) NEW: Fix relative /wp-content paths in srcset/data attributes
+  // Replace "/wp-content/..." with "https://sites.kaliumtheme.com/elementor/furniture/wp-content/..."
+  html = html.replace(
+    /(["'])\/wp-content\//g,
+    '$1https://sites.kaliumtheme.com/elementor/furniture/wp-content/'
   );
 
   // 4) remove inline onclick that forces external navigation
@@ -101,6 +108,17 @@ function rewriteHtml(html) {
 // =====================
 // 4) FRONTEND: HTML routes
 // =====================
+
+// 4.2) Mock/Ignore Legacy WordPress Routes (to prevent 404 noise)
+app.all(['/wp-json/*', '/elementor/*', '/wp-includes/*', '/wp-admin/*'], (req, res) => {
+  console.log(`[Mock] Handling legacy request: ${req.path}`);
+  // Return empty JSON or plain text to satisfy the client without error
+  if (req.path.includes('json')) {
+    res.json({});
+  } else {
+    res.send('');
+  }
+});
 // For any HTML request, read file from /frontend, run rewrite, send back.
 
 app.get(['/*.html', '/'], (req, res) => {
@@ -127,6 +145,11 @@ app.get(['/*.html', '/'], (req, res) => {
 // =====================
 // 5) START SERVER
 // =====================
+
+// 4.1) Health Check
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', message: 'Backend is running' });
+});
 
 app.listen(PORT, () => {
   console.log(`Full-stack server listening on http://localhost:${PORT}`);
