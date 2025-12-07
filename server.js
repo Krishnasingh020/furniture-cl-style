@@ -1,5 +1,5 @@
-// server.js  (at project root)
 const express = require('express');
+require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 // OPTIONAL (for later when you hook up DB):
@@ -9,18 +9,20 @@ const app = express();
 const PORT = process.env.PORT || 8000;
 
 // FOLDERS
-const FRONTEND_ROOT = path.join(__dirname, 'frontend');
-const BACKEND_ROOT = path.join(__dirname, 'backend');
+const FRONTEND_ROOT = path.join(__dirname, 'kalium_furniture', 'frontend');
+const BACKEND_ROOT = path.join(__dirname, 'kalium_furniture', 'backend');
 
 // =====================
-// 1) (LATER) DB CONNECT
+// 1) DB CONNECT
 // =====================
-// When you’re ready to use Mongo, you’ll add something like:
-//
-// mongoose
-//   .connect('mongodb://127.0.0.1:27017/kalium_furniture')
-//   .then(() => console.log('MongoDB connected'))
-//   .catch(console.error);
+// Connect to MongoDB Atlas if MONGODB_URI is provided, otherwise fallback to local
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/kalium_furniture';
+
+const mongoose = require('mongoose');
+mongoose
+  .connect(MONGODB_URI)
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.error('MongoDB connection error:', err));
 
 // =====================
 // 2) API ROUTES
